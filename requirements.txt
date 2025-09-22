@@ -1,0 +1,7 @@
+dds-cloudapi-sdk
+label-studio-sdk
+label-studio-converter
+pycocotools
+lxml
+pillow
+numpy
