@@ -250,9 +250,17 @@ def main():
         key = norm_filename(img_path)
         match = task_map.get(key)
         if not match:
-            log(f"No task match for {img_path} (normalized '{key}')")
-            skipped += 1
-            continue
+            candidates = [(k, v) for k, v in task_map.items() if key in k]
+            if len(candidates) == 1:
+                match = candidates[0][1]
+                log(f"Fuzzy match: '{key}' found in '{candidates[0][0]}'")
+            elif len(candidates) > 1:
+                match = candidates[0][1]
+                log(f"Multiple fuzzy matches for '{key}': {[c[0] for c in candidates]}, using first.")
+            else:
+                log(f"No task match for {img_path} (normalized '{key}')")
+                skipped += 1
+                continue
         task_id, task_img_url = match
 
         # post prediction
