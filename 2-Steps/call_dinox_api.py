@@ -67,7 +67,7 @@ MAPPING = {
     "flower": "plant",
     
     "house": "building",
-    "syscraper": "building",
+    "skyscraper": "building",
     "bridge": "building",
     
     "hurdle": "barrier",

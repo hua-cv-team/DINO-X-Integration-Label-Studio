@@ -36,7 +36,7 @@ MAPPING = {
     "person": "citizen","pedestrian": "citizen","woman": "citizen","people": "citizen",
     "mound": "water","pool": "water","lake": "water","river": "water","puddle": "water",
     "flower": "plant",
-    "house": "building","syscraper": "building","bridge": "building",
+    "house": "building","skyscraper": "building","bridge": "building",
     "hurdle": "barrier",
     "garbage": "debris","rubble": "debris",
     "bulldozer": "excavator",
@@ -167,6 +167,8 @@ def main():
     ap.add_argument("--project_id", type=int, required=True)
     ap.add_argument("--model_version", default="DINO-X-1.0")
     ap.add_argument("--output_dir", required=False, help="Optional dir to save one JSON per image")
+    ap.add_argument("--unmatched_csv", required=False, default="unmatched_labels.csv", help="CSV file to append unmatched label counts")
+    ap.add_argument("--allow_upload", action="store_true", help="Allow uploading images to Label Studio if not found")
     args = ap.parse_args()
 
     # enumerate images
@@ -301,6 +303,31 @@ def main():
         for label, count in unmatched_labels.items():
             log(f"{label} - {count}")
         log(f"All unmatched - {total_unmatched}")
+
+        # --- Append/update unmatched label counts to CSV ---
+        import csv
+        csv_path = args.unmatched_csv
+        # Read existing counts if file exists
+        existing = {}
+        if os.path.exists(csv_path):
+            with open(csv_path, "r", newline='', encoding="utf-8") as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    if len(row) >= 2:
+                        label, count = row[0], row[1]
+                        try:
+                            existing[label] = int(count)
+                        except Exception:
+                            continue
+        # Update with new counts
+        for label, count in unmatched_labels.items():
+            existing[label] = existing.get(label, 0) + count
+        # Write back to CSV (overwrite)
+        with open(csv_path, "w", newline='', encoding="utf-8") as f:
+            writer = csv.writer(f)
+            for label, count in existing.items():
+                writer.writerow([label, count])
+        log(f"Unmatched label counts written/appended to {csv_path}")
 
 if __name__ == "__main__":
     main()

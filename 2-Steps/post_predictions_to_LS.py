@@ -125,6 +125,7 @@ def main():
     ap.add_argument("--ls_url", default="http://10.100.52.107:8080")
     ap.add_argument("--api_key", required=True)
     ap.add_argument("--project_id", type=int, required=True)
+    ap.add_argument("--unmatched_csv", required=False, default="unmatched_labels.csv", help="CSV file to append unmatched label counts")
     args = ap.parse_args()
 
     files = sorted(glob.glob(os.path.join(args.input_dir, "*.json")))
@@ -247,6 +248,32 @@ def main():
         for label, count in unmatched_labels.items():
             log(f"{label} - {count}")
         log(f"All unmatched - {total_unmatched_labels}")
+
+        # --- Append/update unmatched label counts to CSV ---
+        import csv
+        csv_path = args.unmatched_csv
+        # Read existing counts if file exists
+        existing = {}
+        if os.path.exists(csv_path):
+            with open(csv_path, "r", newline='', encoding="utf-8") as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    if len(row) >= 2:
+                        label, count = row[0], row[1]
+                        try:
+                            existing[label] = int(count)
+                        except Exception:
+                            continue
+        # Update with new counts
+        for label, count in unmatched_labels.items():
+            existing[label] = existing.get(label, 0) + count
+        # Write back to CSV (overwrite)
+        with open(csv_path, "w", newline='', encoding="utf-8") as f:
+            import csv
+            writer = csv.writer(f)
+            for label, count in existing.items():
+                writer.writerow([label, count])
+        log(f"Unmatched label counts written/appended to {csv_path}")
 
 if __name__ == "__main__":
     main()
