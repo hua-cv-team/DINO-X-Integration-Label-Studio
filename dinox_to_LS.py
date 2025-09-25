@@ -169,6 +169,7 @@ def main():
     ap.add_argument("--output_dir", required=False, help="Optional dir to save one JSON per image")
     ap.add_argument("--unmatched_csv", required=False, default="unmatched_labels.csv", help="CSV file to append unmatched label counts")
     ap.add_argument("--allow_upload", action="store_true", help="Allow uploading images to Label Studio if not found")
+    ap.add_argument("--force-upload", action="store_true", help="Force upload predictions even if JSON exists for this image")
     args = ap.parse_args()
 
     # enumerate images
@@ -215,7 +216,80 @@ def main():
     posted = wrote = skipped = 0
 
     for img_path in img_files:
-        # call DINO-X
+        norm_base = norm_filename(img_path)
+        json_exists = False
+        json_path = None
+        if args.output_dir:
+            json_path = os.path.join(args.output_dir, os.path.splitext(norm_base)[0] + ".json")
+            if os.path.exists(json_path):
+                json_exists = True
+
+        if json_exists and not args.force_upload:
+            log(f"Skip upload for {img_path} (normalized '{norm_base}') - JSON already exists. Use --force-upload to override.")
+            skipped += 1
+            continue
+
+        if json_exists and args.force_upload:
+            # Load results from JSON, skip DINO-X call
+            print(f"Load results from {json_path} for {img_path}")
+            with open(json_path, "r", encoding="utf-8") as f:
+                pred_json = json.load(f)
+            # Use the first prediction in the file
+            predictions = pred_json.get("predictions", [])
+            if not predictions:
+                log(f"No predictions in JSON for {img_path}")
+                skipped += 1
+                continue
+            pred = predictions[0]
+            results = pred.get("result", [])
+            avg_score = pred.get("score", 0.0)
+            # Try to get task_img_url from JSON data
+            task_img_url = pred_json.get("data", {}).get(data_key, None)
+            if not task_img_url:
+                # fallback to task map
+                key = norm_filename(img_path)
+                match = task_map.get(key)
+                if not match:
+                    candidates = [(k, v) for k, v in task_map.items() if key in k]
+                    if len(candidates) == 1:
+                        match = candidates[0][1]
+                        log(f"Fuzzy match: '{key}' found in '{candidates[0][0]}'")
+                    elif len(candidates) > 1:
+                        match = candidates[0][1]
+                        log(f"Multiple fuzzy matches for '{key}': {[c[0] for c in candidates]}, using first.")
+                    else:
+                        log(f"No task match for {img_path} (normalized '{key}')")
+                        skipped += 1
+                        continue
+                task_id, task_img_url = match
+            else:
+                # find task_id by matching task_img_url
+                match = None
+                for k, v in task_map.items():
+                    if v[1] == task_img_url:
+                        match = v
+                        break
+                if not match:
+                    log(f"No task match for image url {task_img_url}")
+                    skipped += 1
+                    continue
+                task_id, _ = match
+            # post prediction
+            try:
+                ls.predictions.create(
+                    task=task_id,
+                    model_version=args.model_version,
+                    score=avg_score,
+                    result=results
+                )
+                posted += 1
+            except Exception as e:
+                log(f"Failed to post prediction for task {task_id}: {e}")
+                skipped += 1
+                continue
+            continue  # skip to next image
+
+        # --- Call DINO-X API ---
         try:
             dinox = call_dinox_api(
                 token=args.token,
@@ -279,9 +353,9 @@ def main():
             skipped += 1
             continue
 
-        # optional write JSON
+        # optional write JSON (always use normalized filename)
         if args.output_dir:
-            base = os.path.splitext(os.path.basename(img_path))[0] + ".json"
+            base = os.path.splitext(norm_base)[0] + ".json"
             outp = os.path.join(args.output_dir, base)
             with open(outp, "w", encoding="utf-8") as f:
                 json.dump({
