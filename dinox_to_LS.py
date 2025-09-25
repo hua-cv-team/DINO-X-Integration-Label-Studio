@@ -168,8 +168,6 @@ def main():
     ap.add_argument("--model_version", default="DINO-X-1.0")
     ap.add_argument("--output_dir", required=False, help="Optional dir to save one JSON per image")
     ap.add_argument("--unmatched_csv", required=False, default="unmatched_labels.csv", help="CSV file to append unmatched label counts")
-    ap.add_argument("--allow_upload", action="store_true", help="Allow uploading images to Label Studio if not found")
-    ap.add_argument("--force-upload", action="store_true", help="Force upload predictions even if JSON exists for this image")
     args = ap.parse_args()
 
     # enumerate images
@@ -224,12 +222,32 @@ def main():
             if os.path.exists(json_path):
                 json_exists = True
 
-        if json_exists and not args.force_upload:
-            log(f"Skip upload for {img_path} (normalized '{norm_base}') - JSON already exists. Use --force-upload to override.")
+        # --- match task first so task_id is available ---
+        key = norm_filename(img_path)
+        match = task_map.get(key)
+        if not match:
+            candidates = [(k, v) for k, v in task_map.items() if key in k]
+            if len(candidates) == 1:
+                match = candidates[0][1]
+                log(f"Fuzzy match: '{key}' found in '{candidates[0][0]}'")
+            elif len(candidates) > 1:
+                match = candidates[0][1]
+                log(f"Multiple fuzzy matches for '{key}': {[c[0] for c in candidates]}, using first.")
+            else:
+                log(f"No task match for {img_path} (normalized '{key}')")
+                skipped += 1
+                continue
+        task_id, task_img_url = match
+
+        # --- Now safe to use task_id for prediction checks ---
+        # Fix: Only skip if BOTH JSON exists AND predictions exist for this task
+        existing_preds = ls.predictions.list(task=task_id)
+        if json_exists and existing_preds:
+            log(f"Skip upload for {img_path} (normalized '{norm_base}') - JSON already exists and task has predictions.")
             skipped += 1
             continue
 
-        if json_exists and args.force_upload:
+        if json_exists and not existing_preds:
             # Load results from JSON, skip DINO-X call
             print(f"Load results from {json_path} for {img_path}")
             with open(json_path, "r", encoding="utf-8") as f:
@@ -244,36 +262,7 @@ def main():
             results = pred.get("result", [])
             avg_score = pred.get("score", 0.0)
             # Try to get task_img_url from JSON data
-            task_img_url = pred_json.get("data", {}).get(data_key, None)
-            if not task_img_url:
-                # fallback to task map
-                key = norm_filename(img_path)
-                match = task_map.get(key)
-                if not match:
-                    candidates = [(k, v) for k, v in task_map.items() if key in k]
-                    if len(candidates) == 1:
-                        match = candidates[0][1]
-                        log(f"Fuzzy match: '{key}' found in '{candidates[0][0]}'")
-                    elif len(candidates) > 1:
-                        match = candidates[0][1]
-                        log(f"Multiple fuzzy matches for '{key}': {[c[0] for c in candidates]}, using first.")
-                    else:
-                        log(f"No task match for {img_path} (normalized '{key}')")
-                        skipped += 1
-                        continue
-                task_id, task_img_url = match
-            else:
-                # find task_id by matching task_img_url
-                match = None
-                for k, v in task_map.items():
-                    if v[1] == task_img_url:
-                        match = v
-                        break
-                if not match:
-                    log(f"No task match for image url {task_img_url}")
-                    skipped += 1
-                    continue
-                task_id, _ = match
+            task_img_url = pred_json.get("data", {}).get(data_key, task_img_url)
             # post prediction
             try:
                 ls.predictions.create(
@@ -372,6 +361,7 @@ def main():
         log(f"Wrote {wrote} JSON files to {args.output_dir}")
     log(f"Posted {posted} predictions. Skipped {skipped}.")
 
+    # Print unmatched label stats and update CSV
     if unmatched_labels:
         log("Unmatched label counts:")
         for label, count in unmatched_labels.items():
@@ -402,6 +392,8 @@ def main():
             for label, count in existing.items():
                 writer.writerow([label, count])
         log(f"Unmatched label counts written/appended to {csv_path}")
+    else:
+        log("No unmatched labels found or old jsons were used.")
 
 if __name__ == "__main__":
     main()
