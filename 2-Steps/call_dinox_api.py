@@ -37,6 +37,8 @@ MAPPING = {
     "scooter": "civilian vehicle",
     "taxi": "civilian vehicle",
     "suv": "civilian vehicle",
+    "tricycle": "civilian vehicle",
+    "sailboat": "civilian vehicle",
     
     "bird": "animal",
     "dog": "animal",
@@ -49,14 +51,35 @@ MAPPING = {
     "sheep": "animal",
     "animal": "animal",
     "fish": "animal",
-    "duck": "animal",
     "pig": "animal",
     "bear": "animal",
-    
+    "cat": "animal",    
+    "goat": "animal",
+    "alligator": "animal",
+    "camel": "animal",
+    "snake": "animal",
+    "duck": "animal",
+
     "person": "citizen",
     "pedestrian": "citizen",
     "woman": "citizen",
     "people": "citizen",
+    "body": "citizen",
+    "civilian": "citizen",
+
+    "firefighter": "first responder",
+    "rescuer": "first responder",
+    "police": "first responder",
+
+    "army": "military personnel",
+    "soldier": "military personnel",
+
+    "brace": "pole",
+    "lamppost": "pole",
+
+    "dirt": "dirt road",
+
+    "window box": "window",
     
     "mound": "water",
     "pool": "water",
@@ -65,32 +88,44 @@ MAPPING = {
     "puddle": "water",
     
     "flower": "plant",
+
+    "faucet": "fire hydrant",
     
     "house": "building",
     "skyscraper": "building",
     "bridge": "building",
     
-    "hurdle": "barrier",
+    "hurdle": "fence",
+
+    "rocks": "barrier",
     
     "garbage": "debris",
     "rubble": "debris",
     
     "bulldozer": "excavator",
+    "drill": "excavator",
     
     "glasses": "protective glasses",
     
     "sneaker": "boot", 
     "footwear": "boot",
+    "shoes": "boot",
     
     "handbag": "bag",
     "backpack": "bag",
+    "saddlebag": "bag",
 
     "hose": "fire hose",
+    "cord": "fire hose",
     
     "fire": "flame",
 
     "sinkhole": "hole in the ground",
     "manhole": "hole in the ground",
+
+    "barbed wire": "fence",
+
+    "sidewalk": "road"
 
 }
 

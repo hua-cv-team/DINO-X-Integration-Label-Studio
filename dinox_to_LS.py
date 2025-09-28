@@ -25,27 +25,113 @@ IMG_EXTS = [".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp"]
 
 # ---------- mapping (lowercase keys and values) ----------
 MAPPING = {
-    "car": "civilian vehicle","van": "civilian vehicle","bus": "civilian vehicle",
-    "truck": "civilian vehicle","motorcycle": "civilian vehicle","boat": "civilian vehicle",
-    "bicycle": "civilian vehicle","minivan": "civilian vehicle","nissan": "civilian vehicle",
-    "vehicle": "civilian vehicle","ship": "civilian vehicle","bike": "civilian vehicle",
-    "jeep": "civilian vehicle","scooter": "civilian vehicle","taxi": "civilian vehicle","suv": "civilian vehicle",
-    "bird": "animal","dog": "animal","mammal": "animal","chicken": "animal","elephant": "animal",
-    "giraffe": "animal","goose": "animal","horse": "animal","sheep": "animal","animal": "animal",
-    "fish": "animal","duck": "animal","pig": "animal","bear": "animal",
-    "person": "citizen","pedestrian": "citizen","woman": "citizen","people": "citizen",
-    "mound": "water","pool": "water","lake": "water","river": "water","puddle": "water",
+    
+    "car": "civilian vehicle",
+    "van": "civilian vehicle",
+    "bus": "civilian vehicle",
+    "truck": "civilian vehicle",
+    "motorcycle": "civilian vehicle",
+    "boat": "civilian vehicle",
+    "bicycle": "civilian vehicle",
+    "minivan": "civilian vehicle",
+    "nissan": "civilian vehicle",
+    "vehicle": "civilian vehicle",
+    "ship": "civilian vehicle",
+    "bike": "civilian vehicle",
+    "jeep": "civilian vehicle",
+    "scooter": "civilian vehicle",
+    "taxi": "civilian vehicle",
+    "suv": "civilian vehicle",
+    "tricycle": "civilian vehicle",
+    "sailboat": "civilian vehicle",
+    
+    "bird": "animal",
+    "dog": "animal",
+    "mammal": "animal",
+    "chicken": "animal",
+    "elephant": "animal",
+    "giraffe": "animal",
+    "goose": "animal",
+    "horse": "animal",
+    "sheep": "animal",
+    "animal": "animal",
+    "fish": "animal",
+    "pig": "animal",
+    "bear": "animal",
+    "cat": "animal",    
+    "goat": "animal",
+    "alligator": "animal",
+    "camel": "animal",
+    "snake": "animal",
+    "duck": "animal",
+
+    "person": "citizen",
+    "pedestrian": "citizen",
+    "woman": "citizen",
+    "people": "citizen",
+    "body": "citizen",
+    "civilian": "citizen",
+
+    "firefighter": "first responder",
+    "rescuer": "first responder",
+    "police": "first responder",
+
+    "army": "military personnel",
+    "soldier": "military personnel",
+
+    "brace": "pole",
+    "lamppost": "pole",
+
+    "dirt": "dirt road",
+
+    "window box": "window",
+    
+    "mound": "water",
+    "pool": "water",
+    "lake": "water",
+    "river": "water",
+    "puddle": "water",
+    
     "flower": "plant",
-    "house": "building","skyscraper": "building","bridge": "building",
-    "hurdle": "barrier",
-    "garbage": "debris","rubble": "debris",
+
+    "faucet": "fire hydrant",
+    
+    "house": "building",
+    "skyscraper": "building",
+    "bridge": "building",
+    
+    "hurdle": "fence",
+
+    "rocks": "barrier",
+    
+    "garbage": "debris",
+    "rubble": "debris",
+    
     "bulldozer": "excavator",
+    "drill": "excavator",
+    
     "glasses": "protective glasses",
-    "sneaker": "boot","footwear": "boot",
-    "handbag": "bag","backpack": "bag",
+    
+    "sneaker": "boot", 
+    "footwear": "boot",
+    "shoes": "boot",
+    
+    "handbag": "bag",
+    "backpack": "bag",
+    "saddlebag": "bag",
+
     "hose": "fire hose",
+    "cord": "fire hose",
+    
     "fire": "flame",
-    "sinkhole": "hole in the ground","manhole": "hole in the ground",
+
+    "sinkhole": "hole in the ground",
+    "manhole": "hole in the ground",
+
+    "barbed wire": "fence",
+
+    "sidewalk": "road"
+
 }
 
 def log(x): print(x, flush=True)
@@ -162,7 +248,7 @@ def main():
     ap.add_argument("--bbox_threshold", type=float, default=0.25)
     ap.add_argument("--iou_threshold", type=float, default=0.8)
     ap.add_argument("--mask_format", default="coco_rle", choices=["coco_rle"])
-    ap.add_argument("--ls_url", default="http://10.100.52.107:8080")
+    ap.add_argument("--ls_url", default="http://10.100.55.15:8080/")
     ap.add_argument("--api_key", required=True, help="Label Studio API key")
     ap.add_argument("--project_id", type=int, required=True)
     ap.add_argument("--model_version", default="DINO-X-1.0")
